@@ -6,6 +6,8 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/stretchr/testify v1.7.2
 	google.golang.org/protobuf v1.28.0
+	gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405
+	launchpad.net/gocheck v0.0.0-20140225173054-000000000087
 )
 
 require (
