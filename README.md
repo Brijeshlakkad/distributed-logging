@@ -1,6 +1,7 @@
 # Distributed Logging
-A commit logging distributed services with Go.
+A commit logging distributed services with Go. Streams data securely!
 
+**This project is under development**
 ### **Why build this? What's new here?**
 
 - Simple reason is that distributed systems are cool because of many reasons and some of them are large-scalable, high availability, secure, and fast.
@@ -31,7 +32,7 @@ It’s not deployed anywhere right now, I’m still coding the services.
 
 ### **How can I run this locally?**
 
-Yes, go ahead and install prerequisites, clone the repo and deploy on your own Kubernetes cluster.
+Go ahead!! Install prerequisites, clone the repo and deploy on your own Kubernetes cluster.
 
 ### **Can I contribute to this project?**
 
