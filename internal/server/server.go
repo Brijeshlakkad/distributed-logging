@@ -4,6 +4,7 @@ import (
 	"context"
 
 	api "github.com/Brijeshlakkad/distributedlogging/api/v1"
+	"google.golang.org/grpc"
 )
 
 type Config struct {
@@ -22,6 +23,17 @@ func newgrpcServer(config *Config) (srv *grpcServer, err error) {
 		Config: config,
 	}
 	return srv, nil
+}
+
+// To enable user to pass their own listener implementation.
+func NewGRPCServer(config *Config) (*grpc.Server, error) {
+	gsrv := grpc.NewServer()
+	srv, err := newgrpcServer(config)
+	if err != nil {
+		return nil, err
+	}
+	api.RegisterLogServer(gsrv, srv)
+	return gsrv, nil
 }
 
 func (s *grpcServer) Produce(ctx context.Context, req *api.ProduceRequest) (*api.ProduceResponse, error) {
