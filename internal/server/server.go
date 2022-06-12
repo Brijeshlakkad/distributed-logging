@@ -2,10 +2,19 @@ package server
 
 import (
 	"context"
+	"strings"
+	"time"
 
 	api "github.com/Brijeshlakkad/distributedlogging/api/v1"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
+	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
+	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+	"go.opencensus.io/plugin/ocgrpc"
+	"go.opencensus.io/stats/view"
+	"go.opencensus.io/trace"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -44,13 +53,46 @@ func newgrpcServer(config *Config) (srv *grpcServer, err error) {
 
 // To enable user to pass their own listener implementation.
 func NewGRPCServer(config *Config, opts ...grpc.ServerOption) (*grpc.Server, error) {
+	logger := zap.L().Named("server")
+	zapOpts := []grpc_zap.Option{
+		grpc_zap.WithDurationField(func(duration time.Duration) zapcore.Field {
+			return zap.Int64(
+				"grpc.time_ns",
+				duration.Nanoseconds(),
+			)
+		}),
+	}
+
+	// In production you may not want to trace every request because it could affect performance, require too much data, or trace confidential data.
+	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+	err := view.Register(ocgrpc.DefaultServerViews...)
+	if err != nil {
+		return nil, err
+	}
+
+	// If tracing too much is the problem, you can use the probability sampler and sample a percentage of the requests. (Trade-offs: this will miss important requests)
+	halfSampler := trace.ProbabilitySampler(0.5)
+	trace.ApplyConfig(trace.Config{
+		DefaultSampler: func(sp trace.SamplingParameters) trace.SamplingDecision {
+			if strings.Contains(sp.Name, "Produce") {
+				return trace.SamplingDecision{Sample: true}
+			}
+			return halfSampler(sp)
+		},
+	})
+
 	opts = append(opts, grpc.StreamInterceptor(
 		grpc_middleware.ChainStreamServer(
+			grpc_ctxtags.StreamServerInterceptor(),
+			grpc_zap.StreamServerInterceptor(logger, zapOpts...),
 			grpc_auth.StreamServerInterceptor(authenticate),
 		)),
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			grpc_ctxtags.UnaryServerInterceptor(),
+			grpc_zap.UnaryServerInterceptor(logger, zapOpts...),
 			grpc_auth.UnaryServerInterceptor(authenticate),
 		)),
+		grpc.StatsHandler(&ocgrpc.ServerHandler{}),
 	)
 	gsrv := grpc.NewServer(opts...)
 	srv, err := newgrpcServer(config)
