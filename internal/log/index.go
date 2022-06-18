@@ -4,7 +4,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/Brijeshlakkad/distributedlogging/gommap"
+	"github.com/tysonmote/gommap"
 )
 
 var (
