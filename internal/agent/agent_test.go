@@ -17,6 +17,7 @@ import (
 	api "github.com/Brijeshlakkad/distributedlogging/api/v1"
 	"github.com/Brijeshlakkad/distributedlogging/internal/agent"
 	"github.com/Brijeshlakkad/distributedlogging/internal/config"
+	"github.com/Brijeshlakkad/distributedlogging/internal/loadbalance"
 )
 
 func TestAgent(t *testing.T) {
@@ -80,6 +81,7 @@ func TestAgent(t *testing.T) {
 			)
 		}
 	}()
+
 	time.Sleep(3 * time.Second)
 
 	// Produce a record to one server and verify that we can consume the message from the other servers that have (hopefully) replicated for us.
@@ -93,6 +95,10 @@ func TestAgent(t *testing.T) {
 		},
 	)
 	require.NoError(t, err)
+
+	// Wait for the servers to replicate the record before consuming with the leader client.
+	time.Sleep(3 * time.Second)
+
 	consumeResponse, err := leaderClient.Consume(
 		context.Background(),
 		&api.ConsumeRequest{
@@ -101,9 +107,6 @@ func TestAgent(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.Equal(t, consumeResponse.Record.Value, []byte("foo"))
-
-	// wait until replication has finished
-	time.Sleep(3 * time.Second)
 
 	followerClient := client(t, agents[1], peerTLSConfig)
 	consumeResponse, err = followerClient.Consume(
@@ -138,7 +141,8 @@ func client(
 	rpcAddr, err := agent.Config.RPCAddr()
 	require.NoError(t, err)
 	conn, err := grpc.Dial(fmt.Sprintf(
-		"%s",
+		"%s///%s",
+		loadbalance.Name,
 		rpcAddr,
 	), opts...)
 	require.NoError(t, err)
