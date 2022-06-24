@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: distributedlogging
+  namespace: default
+  labels:
+    name: service
+    instance: distributedlogging
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - name: rpc
+      port: 8400
+      targetPort: 8400
+    - name: serf-tcp
+      protocol: "TCP"
+      port: 8401
+      targetPort: 8401
+    - name: serf-udp
+      protocol: "UDP"
+      port: 8401
+      targetPort: 8401
+  selector:
+    name: service
+    instance: distributedlogging

@@ -92,14 +92,15 @@ func (s *getServers) GetServers() ([]*api.Server, error) {
 	}}, nil
 }
 
+var _ resolver.ClientConn = (*clientConn)(nil)
+
 type clientConn struct {
 	resolver.ClientConn
 	state resolver.State
 }
 
-func (c *clientConn) UpdateState(state resolver.State) error {
+func (c *clientConn) UpdateState(state resolver.State) {
 	c.state = state
-	return nil
 }
 
 func (c *clientConn) ReportError(err error) {}

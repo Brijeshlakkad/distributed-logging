@@ -17,9 +17,6 @@ type segment struct {
 	config                 Config
 }
 
-// END: intro
-
-// START: newsegment
 func newSegment(dir string, baseOffset uint64, c Config) (*segment, error) {
 	s := &segment{
 		baseOffset: baseOffset,
@@ -56,9 +53,6 @@ func newSegment(dir string, baseOffset uint64, c Config) (*segment, error) {
 	return s, nil
 }
 
-// END: newsegment
-
-// START: append
 func (s *segment) Append(record *api.Record) (offset uint64, err error) {
 	cur := s.nextOffset
 	record.Offset = cur
@@ -81,9 +75,6 @@ func (s *segment) Append(record *api.Record) (offset uint64, err error) {
 	return cur, nil
 }
 
-// END: append
-
-// START: read
 func (s *segment) Read(off uint64) (*api.Record, error) {
 	_, pos, err := s.index.Read(int64(off - s.baseOffset))
 	if err != nil {
@@ -98,17 +89,11 @@ func (s *segment) Read(off uint64) (*api.Record, error) {
 	return record, err
 }
 
-// END: read
-
-// START: ismaxed
 func (s *segment) IsMaxed() bool {
 	return s.store.size >= s.config.Segment.MaxStoreBytes ||
 		s.index.size >= s.config.Segment.MaxIndexBytes
 }
 
-// END: ismaxed
-
-// START: close
 func (s *segment) Close() error {
 	if err := s.index.Close(); err != nil {
 		return err
@@ -119,9 +104,6 @@ func (s *segment) Close() error {
 	return nil
 }
 
-// END: close
-
-// START: remove
 func (s *segment) Remove() error {
 	if err := s.Close(); err != nil {
 		return err
@@ -135,9 +117,6 @@ func (s *segment) Remove() error {
 	return nil
 }
 
-// END: remove
-
-// START: nearestmultiple
 func nearestMultiple(j, k uint64) uint64 {
 	if j >= 0 {
 		return (j / k) * k
@@ -145,5 +124,3 @@ func nearestMultiple(j, k uint64) uint64 {
 	return ((j - k + 1) / k) * k
 
 }
-
-// END: nearestmultiple

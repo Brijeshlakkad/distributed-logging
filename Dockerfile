@@ -1,4 +1,4 @@
-FROM golang:1.17-alpine AS build
+FROM golang:1.14-alpine AS build
 WORKDIR /go/src/Brijeshlakkad/distributedlogging
 COPY . .
 RUN CGO_ENABLED=0 go build -o /go/bin/distributedlogging ./cmd/distributedlogging

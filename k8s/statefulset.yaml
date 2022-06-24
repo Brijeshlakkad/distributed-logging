@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: distributedlogging
+  namespace: default
+  labels:
+    name: service
+    instance: distributedlogging
+spec:
+  selector:
+    matchLabels:
+      name: service
+      instance: distributedlogging
+  serviceName: distributedlogging
+  replicas: 3
+  template:
+    metadata:
+      name: distributedlogging
+      labels:
+        name: service
+        instance: distributedlogging
+    spec:
+      initContainers:      
+      - name: distributedlogging-config-init
+        image: busybox
+        imagePullPolicy: IfNotPresent
+        command:          
+          - /bin/sh
+          - -c
+          - |-
+            ID=$(echo $HOSTNAME | rev | cut -d- -f1 | rev)
+            cat > /var/run/distributedlogging/config.yaml <<EOD
+            data-dir: /var/run/distributedlogging/data
+            rpc-port: {{.Values.rpcPort}}
+            bind-addr: "$HOSTNAME.distributedlogging.{{.Release.Namespace}}.svc.cluster.local:{{.Values.serfPort}}"
+            bootstrap: $([ $ID = 0 ] && echo true || echo false )
+            $([ $ID != 0 ] && echo 'start-join-addrs: "distributedlogging-0.distributedlogging.{{.Release.Namespace}}.svc.cluster.local:{{.Values.serfPort}}"')
+            EOD
+        volumeMounts:
+        - name: datadir
+          mountPath: /var/run/distributedlogging
+      containers:
+      - name: distributedlogging
+        image: brijeshlakkad/distributedlogging:0.0.1
+        ports:
+        - containerPort: 8400
+          name: rpc
+        - containerPort: 8401
+          name: serf
+        args:
+          - --config-file=/var/run/distributedlogging/config.yaml
+        readinessProbe:
+          exec:
+            command: ["/bin/grpc_health_probe", "-addr=:8400"]
+          initialDelaySeconds: 5
+        livenessProbe:
+          exec:
+            command: ["/bin/grpc_health_probe", "-addr=:8400"]
+          initialDelaySeconds: 10
+        volumeMounts:
+        - name: datadir
+          mountPath: /var/run/distributedlogging      
+  volumeClaimTemplates:
+  - metadata:
+      name: datadir
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

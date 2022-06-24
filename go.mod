@@ -1,25 +1,28 @@
 module github.com/Brijeshlakkad/distributedlogging
 
-go 1.16
+go 1.14
 
 require (
 	github.com/casbin/casbin v1.9.1
 	github.com/gorilla/mux v1.8.0
-	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
-	github.com/hashicorp/raft v1.3.9
-	github.com/hashicorp/raft-boltdb v0.0.0-20220329195025-15018e9b97e0
-	github.com/hashicorp/serf v0.9.8
-	github.com/soheilhy/cmux v0.1.5
-	github.com/spf13/cobra v1.4.0
-	github.com/spf13/viper v1.12.0
-	github.com/stretchr/testify v1.7.2
-	github.com/travisjeffery/go-dynaport v1.0.0
+	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0
+	github.com/hashicorp/raft v1.1.1
+	github.com/hashicorp/raft-boltdb v0.0.0-20191021154308-4207f1bf0617
+	github.com/hashicorp/serf v0.8.5
+	github.com/soheilhy/cmux v0.1.4
+	github.com/spf13/cobra v1.0.0
+	github.com/spf13/viper v1.4.0
+	github.com/stretchr/testify v1.4.0
+	github.com/travisjeffery/go-dynaport v0.0.0-20171218080632-f8768fb615d5
 	github.com/tysonmote/gommap v0.0.2
-	go.opencensus.io v0.23.0
-	go.uber.org/zap v1.21.0
-	google.golang.org/genproto v0.0.0-20220617124728-180714bec0ad
-	google.golang.org/grpc v1.47.0
-	google.golang.org/protobuf v1.28.0
+	go.opencensus.io v0.22.4
+	go.uber.org/zap v1.10.0
+	golang.org/x/net v0.0.0-20200925080053-05aa5d4ee321 // indirect
+	golang.org/x/sys v0.0.0-20200923182605-d9f96fdee20d // indirect
+	google.golang.org/genproto v0.0.0-20200925023002-c2d885f95484
+	google.golang.org/grpc v1.32.0
+	google.golang.org/grpc/examples v0.0.0-20200925170654-e6c98a478e62 // indirect
+	google.golang.org/protobuf v1.25.0
 )
 
 replace github.com/hashicorp/raft-boltdb => github.com/travisjeffery/raft-boltdb v1.0.0
