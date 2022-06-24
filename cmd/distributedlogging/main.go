@@ -18,7 +18,7 @@ func main() {
 	cli := &cli{}
 
 	cmd := &cobra.Command{
-		Use:     "proglog",
+		Use:     "distributedlogging",
 		PreRunE: cli.setupConfig,
 		RunE:    cli.run,
 	}

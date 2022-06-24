@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "distributedlogging.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{ include "distributedlogging.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels: {{ include "distributedlogging.selectorLabels" . | nindent 6 }}
+  serviceName: {{ include "distributedlogging.fullname" . }}
+  replicas: {{ .Values.replicas }}
+  template:
+    metadata:
+      name: {{ include "distributedlogging.fullname" . }}
+      labels: {{ include "distributedlogging.labels" . | nindent 8 }}
+    spec:
+      initContainers:      
+      - name: {{ include "distributedlogging.fullname" . }}-config-init
+        image: busybox
+        imagePullPolicy: IfNotPresent
+        command:          
+          - /bin/sh
+          - -c
+          - |-
+            ID=$(echo $HOSTNAME | rev | cut -d- -f1 | rev)
+            cat > /var/run/distributedlogging/config.yaml <<EOD
+            data-dir: /var/run/distributedlogging/data
+            rpc-port: {{.Values.rpcPort}}
+            bind-addr: "$HOSTNAME.distributedlogging.{{.Release.Namespace}}.svc.cluster.local:{{.Values.serfPort}}"
+            bootstrap: $([ $ID = 0 ] && echo true || echo false )
+            $([ $ID != 0 ] && echo 'start-join-addrs: "distributedlogging-0.distributedlogging.{{.Release.Namespace}}.svc.cluster.local:{{.Values.serfPort}}"')
+            EOD
+        volumeMounts:
+        - name: datadir
+          mountPath: /var/run/distributedlogging
+      containers:
+      - name: {{ include "distributedlogging.fullname" . }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        ports:
+        - containerPort: {{ .Values.rpcPort }}
+          name: rpc
+        - containerPort: {{ .Values.serfPort }}
+          name: serf
+        args:
+          - --config-file=/var/run/distributedlogging/config.yaml
+        readinessProbe:
+          exec:
+            command: ["/bin/grpc_health_probe", "-addr=:{{ .Values.rpcPort }}"]
+          initialDelaySeconds: 5
+        livenessProbe:
+          exec:
+            command: ["/bin/grpc_health_probe", "-addr=:{{ .Values.rpcPort }}"]
+          initialDelaySeconds: 10
+        volumeMounts:
+        - name: datadir
+          mountPath: /var/run/distributedlogging      
+  volumeClaimTemplates:
+  - metadata:
+      name: datadir
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.storage }}
