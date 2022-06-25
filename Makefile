@@ -62,5 +62,8 @@ compile:
 
 TAG ?= 0.0.1
 
-build-docker:
+build-local-docker:
 	docker build -t brijeshlakkad/distributedlogging:$(TAG) .
+
+build-docker:
+	docker build --platform linux/amd64 -t brijeshlakkad/distributedlogging:$(TAG)-linux-amd64 .
