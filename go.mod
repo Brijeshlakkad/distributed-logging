@@ -3,10 +3,11 @@ module github.com/Brijeshlakkad/distributedlogging
 go 1.14
 
 require (
+	github.com/Jille/raft-grpc-leader-rpc v1.1.0
 	github.com/casbin/casbin v1.9.1
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0
-	github.com/hashicorp/raft v1.1.1
+	github.com/hashicorp/raft v1.1.2
 	github.com/hashicorp/raft-boltdb v0.0.0-20191021154308-4207f1bf0617
 	github.com/hashicorp/serf v0.8.5
 	github.com/soheilhy/cmux v0.1.4

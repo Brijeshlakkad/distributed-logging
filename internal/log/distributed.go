@@ -11,6 +11,7 @@ import (
 	"time"
 
 	api "github.com/Brijeshlakkad/distributedlogging/api/v1"
+	"github.com/Jille/raft-grpc-leader-rpc/rafterrors"
 	"github.com/hashicorp/raft"
 	raftboltdb "github.com/hashicorp/raft-boltdb"
 	"google.golang.org/protobuf/proto"
@@ -146,6 +147,9 @@ func (l *DistributedLog) Append(record *api.Record) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
+	if res == nil {
+		return 0, fmt.Errorf("Append response is nil")
+	}
 	return res.(*api.ProduceResponse).Offset, nil
 }
 
@@ -170,6 +174,9 @@ func (l *DistributedLog) apply(reqType RequestType, req proto.Message) (
 	}
 	timeout := 10 * time.Second
 	future := l.raft.Apply(buf.Bytes(), timeout)
+	if err := future.Error(); err != nil {
+		return nil, rafterrors.MarkRetriable(err)
+	}
 	res := future.Response()
 	if err, ok := res.(error); ok {
 		return nil, err
